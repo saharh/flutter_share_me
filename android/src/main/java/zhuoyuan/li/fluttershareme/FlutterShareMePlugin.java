@@ -6,10 +6,6 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.share.Sharer;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
 import com.twitter.sdk.android.tweetcomposer.TweetComposer;
@@ -57,7 +53,7 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      */
     @Override
     public void onMethodCall(MethodCall call, Result result) {
-        String url, msg;
+        String url, msg, title;
 
         switch (call.method) {
             case "shareFacebook":
@@ -75,8 +71,9 @@ public class FlutterShareMePlugin implements MethodCallHandler {
                 shareWhatsApp(msg, result);
                 break;
             case "system":
+                title = call.argument("title");
                 msg = call.argument("msg");
-                shareSystem(result, msg);
+                shareSystem(result, title, msg);
                 break;
             default:
                 result.notImplemented();
@@ -90,12 +87,12 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      * @param msg    String
      * @param result Result
      */
-    private void shareSystem(Result result, String msg) {
+    private void shareSystem(Result result, String title, String msg) {
         try {
-            Intent textIntent = new Intent("android.intent.action.SEND");
+            Intent textIntent = new Intent(Intent.ACTION_SEND);
             textIntent.setType("text/plain");
-            textIntent.putExtra("android.intent.extra.TEXT", msg);
-            activity.startActivity(Intent.createChooser(textIntent, "Share to"));
+            textIntent.putExtra(Intent.EXTRA_TEXT, msg);
+            activity.startActivity(Intent.createChooser(textIntent, title));
             result.success("success");
         } catch (Exception var7) {
             result.error("error", var7.toString(), "");
@@ -122,6 +119,7 @@ public class FlutterShareMePlugin implements MethodCallHandler {
             result.success("success");
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            result.error("error", e.toString(), "");
         }
     }
 
@@ -133,34 +131,33 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      * @param result Result
      */
     private void shareToFacebook(String url, String msg, Result result) {
-        FacebookSdk.setApplicationId("343254889799245");
-        FacebookSdk.sdkInitialize(activity.getApplicationContext());
-        ShareDialog shareDialog = new ShareDialog(activity);
+//        FacebookSdk.setApplicationId("");
+//        FacebookSdk.sdkInitialize(activity.getApplicationContext());
         // this part is optional
-        shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
-            @Override
-            public void onSuccess(Sharer.Result result) {
-                System.out.println("--------------------success");
-
-            }
-
-            @Override
-            public void onCancel() {
-                System.out.println("-----------------onCancel");
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-                System.out.println("---------------onError");
-            }
-        });
-
+//        shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
+//            @Override
+//            public void onSuccess(Sharer.Result result) {
+//                System.out.println("--------------------success");
+//
+//            }
+//
+//            @Override
+//            public void onCancel() {
+//                System.out.println("-----------------onCancel");
+//            }
+//
+//            @Override
+//            public void onError(FacebookException error) {
+//                System.out.println("---------------onError");
+//            }
+//        });
+        ShareDialog shareDialog = new ShareDialog(activity);
         ShareLinkContent content = new ShareLinkContent.Builder()
                 .setContentUrl(Uri.parse(url))
                 .setQuote(msg)
                 .build();
         if (ShareDialog.canShow(ShareLinkContent.class)) {
-            shareDialog.show(content);
+            shareDialog.show(content, ShareDialog.Mode.AUTOMATIC);
             result.success("success");
         }
 
@@ -175,10 +172,10 @@ public class FlutterShareMePlugin implements MethodCallHandler {
     private void shareWhatsApp(String msg, Result result) {
         try {
             Intent textIntent;
-            textIntent = new Intent("android.intent.action.SEND");
+            textIntent = new Intent(Intent.ACTION_SEND);
             textIntent.setType("text/plain");
             textIntent.setPackage("com.whatsapp");
-            textIntent.putExtra("android.intent.extra.TEXT", msg);
+            textIntent.putExtra(Intent.EXTRA_TEXT, msg);
             activity.startActivity(textIntent);
             result.success("success");
         } catch (Exception var9) {
