@@ -27,9 +27,10 @@ class FlutterShareMe {
   }
 
   ///use system share ui
-  Future<String> shareToSystem({String msg}) async {
+  Future<String> shareToSystem({String msg, String title}) async {
     Map<String, Object> arguments = Map<String, dynamic>();
     arguments.putIfAbsent('msg', () => msg);
-    return await _channel.invokeMethod('system', {'msg': msg});
+    arguments.putIfAbsent('title', () => title);
+    return await _channel.invokeMethod('system', arguments);
   }
 }
