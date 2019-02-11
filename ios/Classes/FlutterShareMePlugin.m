@@ -1,20 +1,71 @@
 #import "FlutterShareMePlugin.h"
+//@import FBSDKShareKit;
+#import "FBSDKShareKit.h"
 
 @implementation FlutterShareMePlugin
+    
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  FlutterMethodChannel* channel = [FlutterMethodChannel
-      methodChannelWithName:@"flutter_share_me"
-            binaryMessenger:[registrar messenger]];
-  FlutterShareMePlugin* instance = [[FlutterShareMePlugin alloc] init];
-  [registrar addMethodCallDelegate:instance channel:channel];
+    FlutterMethodChannel* channel = [FlutterMethodChannel
+                                     methodChannelWithName:@"flutter_share_me"
+                                     binaryMessenger:[registrar messenger]];
+    FlutterShareMePlugin* instance = [[FlutterShareMePlugin alloc] init];
+    [registrar addMethodCallDelegate:instance channel:channel];
 }
-
+    
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([@"getPlatformVersion" isEqualToString:call.method]) {
-    result([@"iOS " stringByAppendingString:[[UIDevice currentDevice] systemVersion]]);
-  } else {
-    result(FlutterMethodNotImplemented);
-  }
+    if ([@"shareFacebook" isEqualToString:call.method]) {
+        [self shareToFacebook: call.arguments[@"url"] message: call.arguments[@"msg"] result:result];
+    } else if ([@"shareTwitter" isEqualToString:call.method]) {
+        [self shareToTwitter: call.arguments[@"url"] message: call.arguments[@"msg"] result:result];
+    } else if ([@"shareWhatsApp" isEqualToString:call.method]) {
+        [self shareToWhatsApp:call.arguments[@"msg"] result:result];
+    } else if ([@"system" isEqualToString:call.method]) {
+        [self shareViaSystem:call.arguments[@"msg"] result:result];
+    } else {
+        result(FlutterMethodNotImplemented);
+    }
 }
-
+    
+- (void)shareToFacebook: (NSString *)url message: (NSString *) msg result:(FlutterResult)result {
+    FBSDKShareLinkContent *content = [[FBSDKShareLinkContent alloc] init];
+    content.contentURL = [NSURL URLWithString:url];
+    content.quote = msg;
+    UIViewController *vc = [UIApplication sharedApplication].delegate.window.rootViewController;
+    [FBSDKShareDialog showFromViewController:vc
+                                 withContent:content
+                                    delegate:nil];
+    result(nil);
+}
+    
+- (void)shareToTwitter: (NSString *)url message: (NSString *) msg result:(FlutterResult)result {
+    msg = [msg stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    url = [url stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    NSURL *nsUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://twitter.com/intent/tweet?text=%@&url=%@", msg ,url]];
+    if ([[UIApplication sharedApplication] canOpenURL:nsUrl]) {
+        [[UIApplication sharedApplication] openURL:nsUrl];
+    }
+    result(nil);
+}
+    
+- (void)shareToWhatsApp: (NSString *) msg result:(FlutterResult)result {
+    msg = [msg stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    NSURL *whatsappURL = [NSURL URLWithString:[NSString stringWithFormat:@"whatsapp://send?text=%@", msg]];
+    if ([[UIApplication sharedApplication] canOpenURL: whatsappURL]) {
+        [[UIApplication sharedApplication] openURL: whatsappURL];
+    }
+    result(nil);
+}
+    
+- (void)shareViaSystem: (NSString *) msg result:(FlutterResult)result {
+    UIViewController *controller = [UIApplication sharedApplication].keyWindow.rootViewController;
+    UIActivityViewController *activityViewController =
+    [[UIActivityViewController alloc] initWithActivityItems:@[ msg ]
+                                      applicationActivities:nil];
+    activityViewController.popoverPresentationController.sourceView = controller.view;
+//    if (!CGRectIsEmpty(origin)) {
+//        activityViewController.popoverPresentationController.sourceRect = origin;
+//    }
+    [controller presentViewController:activityViewController animated:YES completion:nil];
+    result(nil);
+}
 @end
