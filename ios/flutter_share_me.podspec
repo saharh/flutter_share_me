@@ -21,7 +21,7 @@ Flutter Plugin for sharing contents to social media.
 #  s.dependency 'FacebookCore'
 #  s.dependency 'FacebookLogin'
 #  s.dependency 'FacebookShare'
-  s.dependency 'FBSDKCoreKit'
+#  s.dependency 'FBSDKCoreKit'
   s.dependency 'FBSDKShareKit'
 #  s.pod_target_xcconfig = { "DEFINES_MODULE" => "YES" }
   s.ios.deployment_target = '9.0'
