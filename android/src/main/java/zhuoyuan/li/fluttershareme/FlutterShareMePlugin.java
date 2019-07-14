@@ -3,7 +3,11 @@ package zhuoyuan.li.fluttershareme;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Parcelable;
 
 import com.facebook.CallbackManager;
 import com.facebook.share.model.ShareLinkContent;
@@ -12,6 +16,8 @@ import com.twitter.sdk.android.tweetcomposer.TweetComposer;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -69,6 +75,11 @@ public class FlutterShareMePlugin implements MethodCallHandler {
             case "shareWhatsApp":
                 msg = call.argument("msg");
                 shareWhatsApp(msg, result);
+                break;
+            case "shareWeChat":
+                title = call.argument("title");
+                msg = call.argument("msg");
+                shareWeChat(msg, title, result);
                 break;
             case "system":
                 title = call.argument("title");
@@ -177,6 +188,42 @@ public class FlutterShareMePlugin implements MethodCallHandler {
             textIntent.setPackage("com.whatsapp");
             textIntent.putExtra(Intent.EXTRA_TEXT, msg);
             activity.startActivity(textIntent);
+            result.success("success");
+        } catch (Exception var9) {
+            result.error("error", var9.toString(), "");
+        }
+    }
+
+    private void shareWeChat(String msg, String title, Result result) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            List<ResolveInfo> resInfo = activity.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+            if (!resInfo.isEmpty()) {
+                List<Intent> targetedShareIntents = new ArrayList<>();
+                for (ResolveInfo info : resInfo) {
+                    Intent targeted = new Intent(Intent.ACTION_SEND);
+                    targeted.setType("text/plain");
+                    ActivityInfo activityInfo = info.activityInfo;
+                    // Shared content
+                    targeted.putExtra(Intent.EXTRA_TEXT, msg);
+                    // Shared headlines
+//                    targeted.putExtra(Intent.EXTRA_SUBJECT, "theme");
+                    targeted.setPackage(activityInfo.packageName);
+                    targeted.setClassName(activityInfo.packageName, info.activityInfo.name);
+                    PackageManager pm = activity.getApplication().getPackageManager();
+                    // Wechat has two distinctions. - Friendship circle and Wechat
+                    if (info.activityInfo.applicationInfo.loadLabel(pm).toString().equals("WeChat") || info.activityInfo.packageName.contains("tencent.mm")) {
+                        targetedShareIntents.add(targeted);
+                    }
+                }
+                Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0), title);
+                if (chooserIntent == null) {
+                    return;
+                }
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedShareIntents.toArray(new Parcelable[]{}));
+                activity.startActivity(chooserIntent);
+            }
             result.success("success");
         } catch (Exception var9) {
             result.error("error", var9.toString(), "");
