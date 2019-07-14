@@ -217,8 +217,13 @@ public class FlutterShareMePlugin implements MethodCallHandler {
                         targetedShareIntents.add(targeted);
                     }
                 }
+                if (targetedShareIntents.isEmpty()) {
+                    result.success("success");
+                    return;
+                }
                 Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0), title);
                 if (chooserIntent == null) {
+                    result.success("success");
                     return;
                 }
                 chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedShareIntents.toArray(new Parcelable[]{}));
