@@ -99,15 +99,17 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      * @param result Result
      */
     private void shareSystem(Result result, String title, String msg) {
-        try {
-            Intent textIntent = new Intent(Intent.ACTION_SEND);
-            textIntent.setType("text/plain");
-            textIntent.putExtra(Intent.EXTRA_TEXT, msg);
-            activity.startActivity(Intent.createChooser(textIntent, title));
-            result.success("success");
-        } catch (Exception var7) {
-            result.error("error", var7.toString(), "");
-        }
+        activity.runOnUiThread(() -> {
+            try {
+                Intent textIntent = new Intent(Intent.ACTION_SEND);
+                textIntent.setType("text/plain");
+                textIntent.putExtra(Intent.EXTRA_TEXT, msg);
+                activity.startActivity(Intent.createChooser(textIntent, title));
+                result.success("success");
+            } catch (Exception var7) {
+                result.error("error", var7.toString(), "");
+            }
+        });
     }
 
     /**
@@ -119,19 +121,21 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      */
     private void shareToTwitter(String url, String msg, Result result) {
         //这里分享一个链接，更多分享配置参考官方介绍：https://dev.twitter.com/twitterkit/android/compose-tweets
-        try {
-            TweetComposer.Builder builder = new TweetComposer.Builder(activity)
-                    .text(msg);
-            if (url != null && url.length() > 0) {
-                builder.url(new URL(url));
-            }
+        activity.runOnUiThread(() -> {
+            try {
+                TweetComposer.Builder builder = new TweetComposer.Builder(activity)
+                        .text(msg);
+                if (url != null && url.length() > 0) {
+                    builder.url(new URL(url));
+                }
 
-            builder.show();
-            result.success("success");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            result.error("error", e.toString(), "");
-        }
+                builder.show();
+                result.success("success");
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                result.error("error", e.toString(), "");
+            }
+        });
     }
 
     /**
@@ -162,16 +166,17 @@ public class FlutterShareMePlugin implements MethodCallHandler {
 //                System.out.println("---------------onError");
 //            }
 //        });
-        ShareDialog shareDialog = new ShareDialog(activity);
-        ShareLinkContent content = new ShareLinkContent.Builder()
-                .setContentUrl(Uri.parse(url))
-                .setQuote(msg)
-                .build();
-        if (ShareDialog.canShow(ShareLinkContent.class)) {
-            shareDialog.show(content, ShareDialog.Mode.AUTOMATIC);
-            result.success("success");
-        }
-
+        activity.runOnUiThread(() -> {
+            ShareDialog shareDialog = new ShareDialog(activity);
+            ShareLinkContent content = new ShareLinkContent.Builder()
+                    .setContentUrl(Uri.parse(url))
+                    .setQuote(msg)
+                    .build();
+            if (ShareDialog.canShow(ShareLinkContent.class)) {
+                shareDialog.show(content, ShareDialog.Mode.AUTOMATIC);
+                result.success("success");
+            }
+        });
     }
 
     /**
@@ -181,57 +186,61 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      * @param result Result
      */
     private void shareWhatsApp(String msg, Result result) {
-        try {
-            Intent textIntent;
-            textIntent = new Intent(Intent.ACTION_SEND);
-            textIntent.setType("text/plain");
-            textIntent.setPackage("com.whatsapp");
-            textIntent.putExtra(Intent.EXTRA_TEXT, msg);
-            activity.startActivity(textIntent);
-            result.success("success");
-        } catch (Exception var9) {
-            result.error("error", var9.toString(), "");
-        }
+        activity.runOnUiThread(() -> {
+            try {
+                Intent textIntent;
+                textIntent = new Intent(Intent.ACTION_SEND);
+                textIntent.setType("text/plain");
+                textIntent.setPackage("com.whatsapp");
+                textIntent.putExtra(Intent.EXTRA_TEXT, msg);
+                activity.startActivity(textIntent);
+                result.success("success");
+            } catch (Exception var9) {
+                result.error("error", var9.toString(), "");
+            }
+        });
     }
 
     private void shareWeChat(String msg, String title, Result result) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("text/plain");
-            List<ResolveInfo> resInfo = activity.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-            if (!resInfo.isEmpty()) {
-                List<Intent> targetedShareIntents = new ArrayList<>();
-                for (ResolveInfo info : resInfo) {
-                    Intent targeted = new Intent(Intent.ACTION_SEND);
-                    targeted.setType("text/plain");
-                    ActivityInfo activityInfo = info.activityInfo;
-                    // Shared content
-                    targeted.putExtra(Intent.EXTRA_TEXT, msg);
-                    // Shared headlines
+        activity.runOnUiThread(() -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                List<ResolveInfo> resInfo = activity.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                if (!resInfo.isEmpty()) {
+                    List<Intent> targetedShareIntents = new ArrayList<>();
+                    for (ResolveInfo info : resInfo) {
+                        Intent targeted = new Intent(Intent.ACTION_SEND);
+                        targeted.setType("text/plain");
+                        ActivityInfo activityInfo = info.activityInfo;
+                        // Shared content
+                        targeted.putExtra(Intent.EXTRA_TEXT, msg);
+                        // Shared headlines
 //                    targeted.putExtra(Intent.EXTRA_SUBJECT, "theme");
-                    targeted.setPackage(activityInfo.packageName);
-                    targeted.setClassName(activityInfo.packageName, info.activityInfo.name);
-                    PackageManager pm = activity.getApplication().getPackageManager();
-                    // Wechat has two distinctions. - Friendship circle and Wechat
-                    if (info.activityInfo.applicationInfo.loadLabel(pm).toString().equals("WeChat") || info.activityInfo.packageName.contains("tencent.mm")) {
-                        targetedShareIntents.add(targeted);
+                        targeted.setPackage(activityInfo.packageName);
+                        targeted.setClassName(activityInfo.packageName, info.activityInfo.name);
+                        PackageManager pm = activity.getApplication().getPackageManager();
+                        // Wechat has two distinctions. - Friendship circle and Wechat
+                        if (info.activityInfo.applicationInfo.loadLabel(pm).toString().equals("WeChat") || info.activityInfo.packageName.contains("tencent.mm")) {
+                            targetedShareIntents.add(targeted);
+                        }
                     }
+                    if (targetedShareIntents.isEmpty()) {
+                        result.success("success");
+                        return;
+                    }
+                    Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0), title);
+                    if (chooserIntent == null) {
+                        result.success("success");
+                        return;
+                    }
+                    chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedShareIntents.toArray(new Parcelable[]{}));
+                    activity.startActivity(chooserIntent);
                 }
-                if (targetedShareIntents.isEmpty()) {
-                    result.success("success");
-                    return;
-                }
-                Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0), title);
-                if (chooserIntent == null) {
-                    result.success("success");
-                    return;
-                }
-                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedShareIntents.toArray(new Parcelable[]{}));
-                activity.startActivity(chooserIntent);
+                result.success("success");
+            } catch (Exception var9) {
+                result.error("error", var9.toString(), "");
             }
-            result.success("success");
-        } catch (Exception var9) {
-            result.error("error", var9.toString(), "");
-        }
+        });
     }
 }
