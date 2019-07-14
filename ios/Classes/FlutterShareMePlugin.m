@@ -19,6 +19,8 @@
         [self shareToTwitter: call.arguments[@"url"] message: call.arguments[@"msg"] result:result];
     } else if ([@"shareWhatsApp" isEqualToString:call.method]) {
         [self shareToWhatsApp:call.arguments[@"msg"] result:result];
+    } else if ([@"shareWeChat" isEqualToString:call.method]) {
+        [self shareToWeChat:call.arguments[@"msg"] result:result];
     } else if ([@"system" isEqualToString:call.method]) {
         [self shareViaSystem:call.arguments[@"msg"] result:result];
     } else {
@@ -53,6 +55,28 @@
     if ([[UIApplication sharedApplication] canOpenURL: whatsappURL]) {
         [[UIApplication sharedApplication] openURL: whatsappURL];
     }
+    result(nil);
+}
+
+- (void)shareToWeChat: (NSString *) msg result:(FlutterResult)result {
+    NSArray *objectsToShare = @[msg];
+    
+    UIActivityViewController *activityVC = [[UIActivityViewController alloc] initWithActivityItems:objectsToShare applicationActivities:nil];
+    
+    NSArray *excludeActivities = @[UIActivityTypeAirDrop,
+                                   UIActivityTypeAddToReadingList,
+                                   UIActivityTypePostToFlickr,
+                                   UIActivityTypeCopyToPasteboard,
+                                   UIActivityTypeSaveToCameraRoll,
+                                   UIActivityTypeAssignToContact,
+                                   UIActivityTypeMessage,
+                                   UIActivityTypeMail,
+                                   UIActivityTypePostToTwitter];
+    
+    activityVC.excludedActivityTypes = excludeActivities;
+    
+    UIViewController *controller = [UIApplication sharedApplication].keyWindow.rootViewController;
+    [controller presentViewController:activityVC animated:YES completion:nil];
     result(nil);
 }
     
