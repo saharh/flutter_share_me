@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Parcelable;
 
 import com.facebook.CallbackManager;
+import com.facebook.FacebookSdk;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
 import com.twitter.sdk.android.tweetcomposer.TweetComposer;
