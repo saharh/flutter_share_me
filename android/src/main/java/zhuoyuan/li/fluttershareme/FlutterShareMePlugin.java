@@ -146,7 +146,7 @@ public class FlutterShareMePlugin implements MethodCallHandler {
      * @param result Result
      */
     private void shareToFacebook(String url, String msg, Result result) {
-//        FacebookSdk.setApplicationId("");
+//        FacebookSdk.setApplicationId("158255858300344");
 //        FacebookSdk.sdkInitialize(activity.getApplicationContext());
         // this part is optional
 //        shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {

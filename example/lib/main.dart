@@ -37,6 +37,9 @@ class _MyAppState extends State<MyApp> {
               child: Text('share to shareFacebook'),
               onPressed: () {
                 FlutterShareMe().shareToFacebook(url: 'https://github.com/lizhuoyuan', msg: 'Hello Flutter');
+//                FlutterShareMe().shareToFacebook(url: 'https://wabi.onelink.me/S90r/bcca1a1b', msg: 'Hello Flutter');
+//                FlutterShareMe().shareToFacebook(url: 'https://www.wabi-app.com', msg: 'Hello Flutter');
+//                FlutterShareMe().shareToFacebook(url: 'https://play.google.com/store/apps/details?id=com.applaudsoft.wabi.virtual_number', msg: 'Hello Flutter');
               },
             ),
             RaisedButton(
